@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Aircraft Militar Map</title>
+
+    <!-- Leaflet CSS  -->
+    <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+    <!-- Font Awesome para el icono de avión -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #aad3df;
+            color: #fff;
+            text-align: center;
+            padding: 1em;
+            transition: background-color 0.5s ease;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 100%; /* Linea estática */
+            height: 2px;
+            background-color: #fff;
+            transform: translateX(-50%);
+        }
+
+        h1 {
+            font-size: 2em;
+            font-family: 'Arial', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 0.5em;
+            margin-left: 1em;
+            color: #fff;
+            display: inline-block;
+            transition: color 0.5s ease;
+        }
+
+        /* Estilo del icono de avión */
+        .fa-plane {
+            margin-right: 0.3em;
+            color: #fff;
+            transition: color 0.5s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><i class="fas fa-plane"></i> Aircraft Militar Map</h1>
+</header>
+<div id="map"></div>
+
+</body>
+</html>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([40.4168, -3.7038], 5);
+
+    // Límites máximos para la longitud
+    var westLimit = -180;  // Límite oeste del mundo
+    var eastLimit = 180;   // Límite este del mundo
+    var bounds = L.latLngBounds(L.latLng(-90, westLimit), L.latLng(90, eastLimit));
+
+    map.setMaxBounds(bounds);
+    map.on('drag', function () {
+        map.panInsideBounds(bounds, {animate: false});
+    });
+
+    // Límite máximo de zoom
+    var minZoomLevel = 3;
+    map.setMinZoom(minZoomLevel);
+
+    // Capa de mapa de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Marcadores al mapa para cada conjunto de coordenadas
+    const iconFlight = L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/2646/2646787.png",
+        iconSize: [64, 64],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+    });
+
+    fetch('/militaryCoor')
+        .then(response => response.json())
+        .then(coordinatesList => {
+            console.log('Coordinates List:', coordinatesList);
+
+            coordinatesList.forEach(coordinates => {
+                const lat = coordinates.lat;
+                const lon = coordinates.lon;
+                const marker = L.marker([lat, lon], {icon: iconFlight, draggable: false});
+                const popup = marker.bindPopup(`Latitud: ${lat} <br> Longitud: ${lon}`).openPopup();
+                popup.addTo(map);
+            });
+        })
+        .catch(error => console.error('Error fetching military flights coordinates:', error));
+</script>
